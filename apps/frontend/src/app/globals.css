@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  --color-void: #050308;
+  --color-night: #11091c;
+  --color-marble: #f7f3ea;
+  --color-ember: #d2a548;
+  --color-ember-strong: #f5c874;
+  --color-aether: #8e6ed4;
+  --color-outline: rgba(255, 255, 255, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-void: #020106;
+  }
+}
+
+@theme inline {
+  --color-background: var(--color-void);
+  --color-foreground: var(--color-marble);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  color: var(--color-foreground);
+  background: radial-gradient(circle at top, #1b0e2f 0%, var(--color-void) 55%);
+  font-family: var(--font-sans, "Geist", sans-serif);
+  min-height: 100vh;
+}
+
+.aurora {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 20% 20%, rgba(210, 165, 72, 0.25), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(142, 110, 212, 0.3), transparent 55%);
+  filter: blur(80px);
+  opacity: 0.6;
+}
