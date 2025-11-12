@@ -19,14 +19,14 @@
 @theme inline {
   --color-background: var(--color-void);
   --color-foreground: var(--color-marble);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Inter", "Segoe UI", "Helvetica Neue", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace;
 }
 
 body {
   color: var(--color-foreground);
   background: radial-gradient(circle at top, #1b0e2f 0%, var(--color-void) 55%);
-  font-family: var(--font-sans, "Geist", sans-serif);
+  font-family: var(--font-sans);
   min-height: 100vh;
 }
 

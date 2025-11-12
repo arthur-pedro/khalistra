@@ -8,6 +8,8 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@khalistra/game-engine": ["modules/game-engine/src/index.ts"],
+      "@khalistra/game-engine/*": ["modules/game-engine/src/*"],
       "@khalistra/modules/*": ["modules/*"],
       "@khalistra/shared/*": ["shared/*"]
     }

@@ -5,6 +5,8 @@ O objetivo é garantir **padronização, escalabilidade, testabilidade e consist
 
 Sempre verifique a pasta docs na raiz do projeto antes de iniciar o desenvolvimento.
 
+Sempre rode o pnpm build e pnpm lint na raiz do projeto no final de cada implementação. Corrija os erros que aparecer antes de finalizar a entrega.
+
 ---
 
 ## 1. Stack Tecnológica
@@ -158,7 +160,7 @@ Se não for substituível, está acoplado demais.
 
 ---
 
-## 9. Checklist para Cada PR
+## 9. Checklist para Cada imlpementação
 
 - [ ] Código escrito seguindo padrões
 - [ ] Typos e inconsistências resolvidas
@@ -169,3 +171,4 @@ Se não for substituível, está acoplado demais.
 - [ ] Sempre rodar o Lint do projeto antes de entregar
 - [ ] Sempre rodar o testes unitários do projeto antes de entregar
 - [ ] Sempre rodar o build do projeto antes de entregar Build
+- [ ] Sempre atualizar CHANGELOG.md com as mudanças

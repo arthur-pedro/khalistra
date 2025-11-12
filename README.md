@@ -11,9 +11,18 @@ Monorepo do projeto Khalistra com frontend Next.js, backend NestJS/Fastify e pac
 
 ## Infra Local (Docker)
 
-1. Copie `.env.example` para `.env` e ajuste credenciais se necessário. Os containers usam os valores de `.env.docker` por padrão.
-2. Suba PostgreSQL + Redis: `pnpm infra:up`. Os dados persistem nos volumes `postgres_data` e `redis_data`.
-3. Para desligar e limpar volumes, use `pnpm infra:down`.
+1. Copie `.env.example` para `.env` e ajuste credenciais se necessário. O `docker-compose` usa automaticamente `.env.docker`.
+2. Execute `pnpm infra:up` para construir os executáveis (Next.js e NestJS) e subir toda a stack (`frontend`, `backend`, `postgres`, `redis`). A primeira execução leva alguns minutos porque as imagens multistage instalam dependências e empacotam apenas o que é necessário em produção.
+3. Acesse `http://localhost:3000` para a interface web baseada no xadrez clássico e `http://localhost:3001/api` para o backend Fastify.
+4. Para desligar e opcionalmente limpar volumes, rode `pnpm infra:down`.
+
+## API (Protótipo)
+
+- `POST /api/matches`: cria uma partida 1v1 com base no módulo `@khalistra/game-engine`. Recebe os IDs dos jogadores e retorna o snapshot completo + evento `game:update`.
+- `GET /api/matches/:matchId`: recupera o estado atual da partida (histórico, peças e turno ativo).
+- `POST /api/matches/:matchId/moves`: aplica um movimento clássico (coordenadas `to`) validado pelo motor. Emite logs estruturados `game:move` e, quando aplicável, `game:finish`.
+
+Os estados permanecem em memória durante o protótipo; o próximo passo é persistir em PostgreSQL/Redis para suportar sessões reais.
 
 ## Módulos e Testes
 

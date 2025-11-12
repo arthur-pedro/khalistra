@@ -1,0 +1,19 @@
+.git
+.turbo
+node_modules
+pnpm-debug.log
+npm-debug.log
+yarn-error.log
+
+# App artifacts
+dist
+.next
+coverage
+
+# Package-specific installs
+apps/*/node_modules
+modules/*/node_modules
+shared/*/node_modules
+
+# Runtime junk
+*.tsbuildinfo

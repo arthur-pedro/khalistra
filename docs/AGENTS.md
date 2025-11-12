@@ -1,4 +1,8 @@
+# Guidelines 
+
 Assim como o xadrez é uma variante do Chaturanga (jogo de tabuleiro antigo precursor do xadrez), o objetivo é criar mais uma variante moderna com regras dinâmicas e divertidas, misturando elementos de rng e cartas de melhorias (Balatro).
+
+Sempre siga a pasta docs para não perder o conceito do jogo
 
 # 🜂 **Nome do Jogo**
 
