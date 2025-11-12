@@ -6,7 +6,7 @@ import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
   {
-    ignores: ['dist', 'coverage', 'eslint.config.mjs', '__tests__/**/*.js', '__tests__/**/*.d.ts']
+    ignores: ['dist', 'coverage', 'eslint.config.mjs', '__tests__/**/*.js', '__tests__/**/*.d.ts', '**/*.d.ts', '**/*.js']
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -15,7 +15,7 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: true,
-        tsconfigRootDir: import.meta.url
+        tsconfigRootDir: new URL('.', import.meta.url).pathname
       },
       globals: {
         ...globals.node,

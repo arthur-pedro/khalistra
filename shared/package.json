@@ -8,7 +8,7 @@
   "types": "index.ts",
   "scripts": {
     "lint": "eslint . --ext .ts",
-    "test": "jest --runInBand --coverage",
+    "test": "jest --runInBand --coverage --passWithNoTests",
     "build": "tsc"
   },
   "devDependencies": {
