@@ -69,12 +69,13 @@ export class MatchesService {
       }),
     );
 
-    if (updatedState.status === 'completed' && updatedState.winnerId) {
+    if (updatedState.status === 'completed') {
+      const finishReason = updatedState.resolution?.reason ?? 'ritual';
       this.writeEvent(
         buildGameEvent('game:finish', {
           matchId,
           winnerId: updatedState.winnerId,
-          reason: 'ritual',
+          reason: finishReason,
         }),
       );
     }

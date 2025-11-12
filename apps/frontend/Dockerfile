@@ -19,7 +19,9 @@ FROM deps AS build
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN pnpm --filter @khalistra/frontend... build
-RUN pnpm --filter @khalistra/frontend... deploy --prod /out/frontend
+RUN pnpm --filter @khalistra/frontend deploy --prod /out/frontend
+# Copy shared module to the deployment
+COPY --from=deps /app/shared /out/frontend/shared
 
 FROM node:22-alpine AS runtime
 WORKDIR /srv/app
@@ -28,5 +30,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 RUN apk add --no-cache dumb-init curl
 COPY --from=build /out/frontend ./
+RUN mkdir -p node_modules/@khalistra \
+  && ln -s /srv/app/shared node_modules/@khalistra/shared
 EXPOSE 3000
 CMD ["dumb-init", "node_modules/.bin/next", "start", "-H", "0.0.0.0", "-p", "3000"]

@@ -17,6 +17,8 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS build
 RUN pnpm --filter @khalistra/backend build
 RUN pnpm deploy --filter @khalistra/backend --prod /out/backend
+# Copy shared module to the deployment
+COPY --from=deps /app/shared /out/backend/shared
 
 FROM node:22-alpine AS runtime
 WORKDIR /srv/app
@@ -26,6 +28,7 @@ RUN apk add --no-cache dumb-init curl
 COPY --from=build /out/backend ./
 RUN mkdir -p node_modules/@khalistra \
   && rm -rf node_modules/@khalistra/game-engine \
-  && ln -s /srv/app/dist/modules/game-engine/src node_modules/@khalistra/game-engine
+  && ln -s /srv/app/dist/modules/game-engine/src node_modules/@khalistra/game-engine \
+  && ln -s /srv/app/shared node_modules/@khalistra/shared
 EXPOSE 3001
 CMD ["dumb-init", "node", "dist/apps/backend/src/main.js"]

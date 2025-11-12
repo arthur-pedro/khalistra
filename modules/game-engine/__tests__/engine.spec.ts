@@ -1,87 +1,173 @@
-import { applyMove, createInitialState, stateToUpdateEvent } from '../src';
-import type { GameStateSnapshot, MoveCommand, PieceState } from '../src';
+import { applyMove, createInitialState, isKingInCheck, listLegalMoves } from '../src';
+import type { GameStateSnapshot, MoveCommand, PieceState, PlayerId, Vector2 } from '../src';
+
+const players: [PlayerId, PlayerId] = ['light', 'shadow'];
+
+const findPiece = (state: GameStateSnapshot, predicate: (piece: PieceState) => boolean) => {
+  const piece = state.pieces.find(predicate);
+  if (!piece) {
+    throw new Error('Peça necessária para o teste não encontrada');
+  }
+  return piece;
+};
+
+const cloneState = (state: GameStateSnapshot, overrides: Partial<GameStateSnapshot>): GameStateSnapshot => ({
+  ...state,
+  ...overrides
+});
 
 describe('@khalistra/game-engine', () => {
-  const players: [string, string] = ['light', 'shadow'];
-
-  it('cria um estado inicial simétrico', () => {
+  it('cria o estado clássico 8x8 com todas as peças', () => {
     const state = createInitialState({ matchId: 'match-001', players });
 
-    expect(state.boardSize).toBeGreaterThan(0);
-    expect(state.pieces).toHaveLength(10);
-    expect(state.pieces.filter((piece) => piece.ownerId === players[0])).toHaveLength(5);
-    expect(state.pieces.filter((piece) => piece.ownerId === players[1])).toHaveLength(5);
+    expect(state.boardSize).toBe(8);
+    expect(state.pieces).toHaveLength(32);
+    expect(state.pieces.filter((piece) => piece.type === 'pawn')).toHaveLength(16);
     expect(state.history).toHaveLength(0);
     expect(state.activePlayer).toBe(players[0]);
+    expect(state.status).toBe('in-progress');
   });
 
-  it('aplica um movimento válido e alterna o turno', () => {
+  it('aplica um movimento válido de peão e alterna o turno', () => {
     const state = createInitialState({ matchId: 'match-002', players });
-    const sentinel = state.pieces.find((piece) => piece.id.startsWith('light.sentinel')) as PieceState;
+    const pawn = findPiece(
+      state,
+      (piece) => piece.ownerId === players[0] && piece.type === 'pawn' && piece.position.x === 4
+    );
 
     const command: MoveCommand = {
-      pieceId: sentinel.id,
-      to: { x: sentinel.position.x, y: sentinel.position.y + 1 }
+      pieceId: pawn.id,
+      to: { x: pawn.position.x, y: pawn.position.y + 1 }
     };
 
     const updated = applyMove(state, command);
 
-    const movedPiece = updated.pieces.find((piece) => piece.id === sentinel.id) as PieceState;
-    expect(movedPiece.position).toEqual(command.to);
+    const moved = findPiece(updated, (piece) => piece.id === pawn.id);
+    expect(moved.position).toEqual(command.to);
     expect(updated.activePlayer).toBe(players[1]);
     expect(updated.turn).toBe(state.turn + 1);
     expect(updated.history).toHaveLength(1);
-    expect(updated.history[0]).toMatchObject({ pieceId: sentinel.id, to: command.to });
+    expect(updated.history[0]).toMatchObject({ pieceId: pawn.id, to: command.to });
   });
 
   it('impede ações fora de turno', () => {
     const state = createInitialState({ matchId: 'match-003', players });
-    const sentinel = state.pieces.find((piece) => piece.id.startsWith('shadow.sentinel')) as PieceState;
+    const knight = findPiece(state, (piece) => piece.ownerId === players[1] && piece.type === 'knight');
 
     const command: MoveCommand = {
-      pieceId: sentinel.id,
-      to: { x: sentinel.position.x, y: sentinel.position.y - 1 }
+      pieceId: knight.id,
+      to: { x: knight.position.x, y: knight.position.y - 2 }
     };
 
     expect(() => applyMove(state, command)).toThrow('Não é o turno deste jogador.');
   });
 
-  it('declara vitória ao capturar peças alvo do ritual', () => {
+  it('bloqueia movimentos que deixariam o rei em xeque', () => {
     const base = createInitialState({ matchId: 'match-004', players });
-    const attacker = base.pieces.find((piece) => piece.id.startsWith('light.oracle')) as PieceState;
-    const defender = base.pieces.find((piece) => piece.id.startsWith('shadow.dancer')) as PieceState;
+    const whiteKing = findPiece(base, (piece) => piece.ownerId === players[0] && piece.type === 'king');
+    const blackKing = findPiece(base, (piece) => piece.ownerId === players[1] && piece.type === 'king');
+    const whiteRook = findPiece(base, (piece) => piece.ownerId === players[0] && piece.type === 'rook');
+    const blackRook = findPiece(base, (piece) => piece.ownerId === players[1] && piece.type === 'rook');
 
-    const customState: GameStateSnapshot = {
-      ...base,
+    const customState: GameStateSnapshot = cloneState(base, {
       pieces: [
-        { ...attacker, position: { x: 2, y: 2 } },
-        { ...defender, position: { x: 3, y: 3 } }
+        { ...whiteKing, position: { x: 4, y: 0 } },
+        { ...blackKing, position: { x: 0, y: 7 } },
+        { ...whiteRook, position: { x: 4, y: 1 } },
+        { ...blackRook, position: { x: 4, y: 7 } }
       ],
-      history: []
+      history: [],
+      turn: 5,
+      activePlayer: players[0],
+      checkedPlayerId: undefined,
+      resolution: undefined,
+      winnerId: undefined
+    });
+
+    const moves = listLegalMoves(customState, whiteRook.id);
+    expect(moves.every((move) => move.to.x === 4)).toBe(true);
+
+    const illegalCommand: MoveCommand = {
+      pieceId: whiteRook.id,
+      to: { x: 5, y: 1 }
     };
 
-    const updated = applyMove(customState, {
-      pieceId: attacker.id,
-      to: { x: 3, y: 3 }
-    });
-
-    expect(updated.winnerId).toBe(players[0]);
-    expect(updated.status).toBe('completed');
-    expect(updated.history.at(-1)?.capturedPieceId).toBe(defender.id);
+    expect(() => applyMove(customState, illegalCommand)).toThrow('Movimento inválido para esta peça.');
   });
 
-  it('projeta o estado em eventos compartilhados', () => {
-    const state = createInitialState({ matchId: 'match-005', players });
-    const event = stateToUpdateEvent(state);
+  it('promove peões automaticamente ao alcançar a última fileira', () => {
+    const base = createInitialState({ matchId: 'match-005', players });
+    const whiteKing = findPiece(base, (piece) => piece.ownerId === players[0] && piece.type === 'king');
+    const blackKing = findPiece(base, (piece) => piece.ownerId === players[1] && piece.type === 'king');
+    const pawn = findPiece(base, (piece) => piece.ownerId === players[0] && piece.type === 'pawn');
 
-    expect(event.name).toBe('game:update');
-    expect(event.payload.matchId).toBe('match-005');
-    expect(event.payload.state).toMatchObject({
-      boardSize: state.boardSize,
-      turn: state.turn,
-      status: state.status
+    const customState: GameStateSnapshot = cloneState(base, {
+      pieces: [
+        { ...whiteKing, position: { x: 4, y: 0 } },
+        { ...blackKing, position: { x: 7, y: 7 } },
+        { ...pawn, position: { x: 0, y: 6 } }
+      ],
+      history: [],
+      turn: 15,
+      activePlayer: players[0],
+      checkedPlayerId: undefined,
+      resolution: undefined,
+      winnerId: undefined
     });
-    const projected = event.payload.state as { pieces: Array<Record<string, unknown>> };
-    expect(projected.pieces[0]).toHaveProperty('ownerId');
+
+    const promotedState = applyMove(customState, {
+      pieceId: pawn.id,
+      to: { x: 0, y: 7 }
+    });
+
+    const promotedPiece = findPiece(promotedState, (piece) => piece.id === pawn.id);
+    expect(promotedPiece.type).toBe('queen');
+    expect(promotedPiece.label).toBe('Rainha');
+    expect(promotedState.history.at(-1)?.promotion).toBe('queen');
+  });
+
+  it('identifica xeque-mate clássico (Mate do Louco)', () => {
+    let state = createInitialState({ matchId: 'match-006', players });
+
+    const moveSequence: Array<{ owner: PlayerId; to: Vector2; piece: (s: GameStateSnapshot) => PieceState }> = [
+      {
+        owner: players[0],
+        to: { x: 5, y: 2 },
+        piece: (snapshot) =>
+          findPiece(snapshot, (piece) => piece.ownerId === players[0] && piece.type === 'pawn' && piece.position.x === 5)
+      },
+      {
+        owner: players[1],
+        to: { x: 4, y: 4 },
+        piece: (snapshot) =>
+          findPiece(snapshot, (piece) => piece.ownerId === players[1] && piece.type === 'pawn' && piece.position.x === 4)
+      },
+      {
+        owner: players[0],
+        to: { x: 6, y: 3 },
+        piece: (snapshot) =>
+          findPiece(snapshot, (piece) => piece.ownerId === players[0] && piece.type === 'pawn' && piece.position.x === 6)
+      },
+      {
+        owner: players[1],
+        to: { x: 7, y: 3 },
+        piece: (snapshot) =>
+          findPiece(snapshot, (piece) => piece.ownerId === players[1] && piece.type === 'queen')
+      }
+    ];
+
+    for (const step of moveSequence) {
+      const piece = step.piece(state);
+      state = applyMove(state, {
+        pieceId: piece.id,
+        to: step.to
+      });
+    }
+
+    expect(state.status).toBe('completed');
+    expect(state.resolution?.reason).toBe('checkmate');
+    expect(state.winnerId).toBe(players[1]);
+    expect(state.history.at(-1)?.checkmate).toBe(true);
+    expect(isKingInCheck(state, players[0])).toBe(true);
   });
 });

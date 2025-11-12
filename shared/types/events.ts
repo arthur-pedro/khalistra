@@ -28,8 +28,8 @@ export interface GameEventPayloads {
   };
   'game:finish': {
     matchId: string;
-    winnerId: string;
-    reason: 'surrender' | 'checkmate' | 'timeout' | 'ritual';
+    winnerId?: string;
+    reason: 'surrender' | 'checkmate' | 'timeout' | 'ritual' | 'stalemate';
   };
 }
 

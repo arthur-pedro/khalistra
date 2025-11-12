@@ -59,6 +59,7 @@ export class MatchesController {
         pieceId: body.pieceId,
         to: body.to,
         ritualCard: body.ritualCard,
+        promoteTo: body.promoteTo,
       };
 
       const state = this.matchesService.submitMove(matchId, command);

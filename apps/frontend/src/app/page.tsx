@@ -1,62 +1,152 @@
-import Link from "next/link";
-import { CORE_GAME_EVENTS } from "@khalistra/shared/constants";
+'use client';
+
+import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  listLegalMoves,
+  type GameStatus,
+  type LegalMove,
+  type MoveRecord,
+  type PlayerId,
+  type Vector2
+} from '@khalistra/game-engine';
+import { CORE_GAME_EVENTS } from '@khalistra/shared/constants';
+import { MatchBoard } from '../components/board';
+import { createMatch, submitMove, type MatchEnvelope } from '../lib/api';
 
 const pillars = [
   {
-    title: "Regras Vivas",
-    detail: "Cartas de ritual alteram alcance, ordem de turnos e até a geometria do tabuleiro.",
+    title: 'Regras Vivas',
+    detail: 'Cartas de ritual alteram alcance, ordem de turnos e até a geometria do tabuleiro.'
   },
   {
-    title: "Progressão Tática",
-    detail: "Cada duelo concede essências para desbloquear escolas e experimentos na forja arcana.",
+    title: 'Progressão Tática',
+    detail: 'Cada duelo concede essências para desbloquear escolas e experimentos na forja arcana.'
   },
   {
-    title: "PvP Event-Driven",
-    detail: "Socket.io garante sincronização instantânea e feedback estruturado para cada ação crítica.",
-  },
+    title: 'PvP Event-Driven',
+    detail: 'Socket.io garante sincronização instantânea e feedback estruturado para cada ação crítica.'
+  }
 ];
 
 const milestones = [
   {
-    label: "Protótipo Web",
-    description: "Frontend Next.js + Zustand para simular duelos rápidos e validar novas peças.",
+    label: 'Protótipo Web',
+    description: 'Frontend Next.js + Zustand para simular duelos rápidos e validar novas peças.'
   },
   {
-    label: "Engine Independente",
-    description: "Módulo game-engine com regras isoladas e testes Jest cobrindo 80% do core.",
+    label: 'Engine Independente',
+    description: 'Módulo game-engine com regras isoladas e testes Jest cobrindo 80% do core.'
   },
   {
-    label: "Arena Ritual",
-    description: "Matchmaking em tempo real, monitorado via OpenTelemetry + Prometheus.",
-  },
+    label: 'Arena Ritual',
+    description: 'Matchmaking em tempo real, monitorado via OpenTelemetry + Prometheus.'
+  }
 ];
 
 const ritualEvents = CORE_GAME_EVENTS.slice(0, 3);
+const DEFAULT_PLAYERS: [PlayerId, PlayerId] = ['ritualist-aurora', 'ritualist-umbra'];
+const PLAYER_TITLES = ['Ordem Solar', 'Círculo Umbral'] as const;
+
+const statusLabels: Record<GameStatus, string> = {
+  'awaiting': 'Aguardando conexão',
+  'in-progress': 'Duelo em andamento',
+  check: 'Xeque declarado',
+  ritual: 'Ritual extraordinário',
+  completed: 'Conclusão do ritual'
+};
+
+const formatSquare = (position: Vector2) => `${String.fromCharCode(97 + position.x)}${position.y + 1}`;
+
+const describeMove = (record: MoveRecord) => {
+  const [, pieceType = record.pieceId] = record.pieceId.split('.');
+  const captureMarker = record.capturedPieceType ? 'x' : '→';
+  const promotion = record.promotion ? ` (promoção: ${record.promotion})` : '';
+  const suffix = record.checkmate ? ' #RitualFinal' : record.check ? ' +Xeque' : '';
+  return `${pieceType.toUpperCase()} ${captureMarker} ${formatSquare(record.to)}${promotion}${suffix}`;
+};
 
 export default function Home() {
+  const [match, setMatch] = useState<MatchEnvelope | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedPieceId, setSelectedPieceId] = useState<string>();
+  const [error, setError] = useState<string>();
+
+  const spawnMatch = useCallback(async () => {
+    setLoading(true);
+    setSelectedPieceId(undefined);
+    setError(undefined);
+    try {
+      const payload = await createMatch(DEFAULT_PLAYERS);
+      setMatch(payload);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível criar a partida.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void spawnMatch();
+  }, [spawnMatch]);
+
+  const legalMoves: LegalMove[] = useMemo(() => {
+    if (!match?.state || !selectedPieceId) {
+      return [];
+    }
+
+    const piece = match.state.pieces.find((candidate) => candidate.id === selectedPieceId);
+    if (!piece || piece.ownerId !== match.state.activePlayer) {
+      return [];
+    }
+
+    return listLegalMoves(match.state, selectedPieceId);
+  }, [match?.state, selectedPieceId]);
+
+  const handleMove = async (pieceId: string, target: Vector2) => {
+    if (!match) {
+      return;
+    }
+
+    setSubmitting(true);
+    setError(undefined);
+    try {
+      const payload = await submitMove(match.matchId, {
+        pieceId,
+        to: target
+      });
+      setMatch(payload);
+      setSelectedPieceId(undefined);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível aplicar o movimento.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const state = match?.state;
+  const history = state?.history.slice(-10).reverse() ?? [];
+  const lastUpdate = match?.event.timestamp ? new Date(match.event.timestamp) : undefined;
+
   return (
     <div className="relative isolate min-h-screen overflow-hidden px-4 py-12 sm:px-6 lg:px-0 lg:py-16">
       <div className="aurora" aria-hidden="true" />
       <main className="relative mx-auto flex w-full max-w-6xl flex-col gap-12 rounded-[32px] border border-white/10 bg-gradient-to-b from-[rgba(13,6,22,0.85)] to-[rgba(5,3,8,0.92)] p-8 shadow-[0_30px_120px_rgba(0,0,0,0.65)] backdrop-blur">
         <section id="manuscritos" className="flex flex-col gap-8 lg:flex-row lg:items-end">
           <div className="flex-1 space-y-6">
-            <p className="text-sm uppercase tracking-[0.4em] text-[rgba(210,165,72,0.85)]">
-              Ordem Khalistra
-            </p>
+            <p className="text-sm uppercase tracking-[0.4em] text-[rgba(210,165,72,0.85)]">Ordem Khalistra</p>
             <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
               Estratégias vivas moldadas por rituais, caos controlado e escolhas permanentes.
             </h1>
             <p className="text-lg text-zinc-200">
-              Cada jogada pode invocar cartas, distorcer linhas sagradas e reescrever a partida. Nosso
-              objetivo é prototipar uma experiência elegante, competitiva e mística — inspirada em
-              Chaturanga, Balatro e autochess modernos.
+              Cada jogada pode invocar cartas, distorcer linhas sagradas e reescrever a partida. Nosso objetivo é
+              prototipar uma experiência elegante, competitiva e mística — inspirada em Chaturanga, Balatro e
+              autochess modernos.
             </p>
             <ul className="flex flex-wrap gap-2 text-[0.65rem] uppercase tracking-[0.4em] text-white/70">
               {ritualEvents.map((event) => (
-                <li
-                  key={event}
-                  className="rounded-full border border-white/15 px-3 py-1 text-white/80"
-                >
+                <li key={event} className="rounded-full border border-white/15 px-3 py-1 text-white/80">
                   {event}
                 </li>
               ))}
@@ -77,9 +167,7 @@ export default function Home() {
             </div>
           </div>
           <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-zinc-200 shadow-inner lg:w-auto">
-            <p className="text-xs uppercase tracking-[0.25em] text-white/70">
-              Stack oficial
-            </p>
+            <p className="text-xs uppercase tracking-[0.25em] text-white/70">Stack oficial</p>
             <dl className="mt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <dt className="text-white/70">Frontend</dt>
@@ -97,15 +185,132 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="laboratorio" className="grid gap-6 lg:grid-cols-3">
+        <section id="laboratorio" className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <div className="space-y-4">
+            <header className="flex items-center justify-between text-sm text-white/70">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-[var(--color-ember-strong)]">Primeiro protótipo jogável</p>
+                <h2 className="text-2xl font-semibold text-white">Tabuleiro clássico com regras modernas</h2>
+              </div>
+              <div className="text-right text-xs">
+                <p className="text-white/60">Match ID</p>
+                <p className="font-mono text-white">{match?.matchId ?? '–'}</p>
+              </div>
+            </header>
+            {error && (
+              <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">
+                {error}
+              </div>
+            )}
+            <MatchBoard
+              state={state}
+              selectedPieceId={selectedPieceId}
+              legalMoves={legalMoves}
+              disabled={loading || submitting}
+              onSelectPiece={(pieceId) => setSelectedPieceId(pieceId)}
+              onSubmitMove={handleMove}
+            />
+            <div className="flex flex-wrap gap-3 text-sm">
+              <button
+                type="button"
+                onClick={() => void spawnMatch()}
+                disabled={loading}
+                className="rounded-full border border-white/20 px-4 py-2 text-white transition hover:border-white disabled:opacity-50"
+              >
+                Reiniciar ritual
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedPieceId(undefined)}
+                className="rounded-full border border-white/10 px-4 py-2 text-white/80 transition hover:border-white/40"
+              >
+                Limpar seleção
+              </button>
+              {loading && <span className="text-xs uppercase tracking-[0.3em] text-white/60">Invocando tabuleiro…</span>}
+              {submitting && <span className="text-xs uppercase tracking-[0.3em] text-white/60">Processando jogada…</span>}
+            </div>
+          </div>
+          <div className="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-5 text-white shadow-inner shadow-black/40">
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.3em] text-white/70">Estado</p>
+              <h3 className="text-xl font-semibold">{state ? statusLabels[state.status] : 'Carregando ritual'}</h3>
+              {state?.resolution?.reason === 'stalemate' && (
+                <p className="text-sm text-white/70">Empate por afogamento — nenhum movimento legal restante.</p>
+              )}
+              {state?.checkedPlayerId && state.status !== 'completed' && (
+                <p className="text-sm text-rose-200">
+                  Xeque contra {state.checkedPlayerId === state.players[0] ? PLAYER_TITLES[0] : PLAYER_TITLES[1]}.
+                </p>
+              )}
+              {lastUpdate && (
+                <p className="text-xs text-white/60">
+                  Atualizado em {lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
+            </div>
+            <div className="grid gap-3">
+              {state?.players.map((playerId, index) => {
+                const isActive = state.activePlayer === playerId;
+                const isChecked = state.checkedPlayerId === playerId;
+                const isWinner = state.winnerId === playerId;
+                return (
+                  <article
+                    key={playerId}
+                    className="rounded-2xl border border-white/10 bg-black/20 p-4 shadow-inner shadow-black/40"
+                  >
+                    <header className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.3em] text-white/50">{PLAYER_TITLES[index]}</p>
+                        <p className="font-semibold text-white">{playerId}</p>
+                      </div>
+                      <span
+                        className={[
+                          'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
+                          isWinner
+                            ? 'bg-emerald-500/20 text-emerald-200'
+                            : isActive
+                              ? 'bg-[var(--color-ember)]/20 text-[var(--color-ember-strong)]'
+                              : 'bg-white/5 text-white/60'
+                        ].join(' ')}
+                      >
+                        {isWinner ? 'Vitória' : isActive ? 'Ativo' : 'Aguardando'}
+                      </span>
+                    </header>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-white/70">
+                      {isChecked && <span className="rounded-full border border-rose-400/40 px-2 py-0.5 text-rose-200">Xeque</span>}
+                      {state?.resolution?.reason === 'stalemate' && !state.winnerId && (
+                        <span className="rounded-full border border-white/20 px-2 py-0.5 text-white/70">Empate</span>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/70">Últimos movimentos</p>
+              <ul className="mt-3 space-y-2 text-sm text-white/80">
+                {history.length === 0 && <li>Nenhum movimento registrado ainda.</li>}
+                {history.map((record) => (
+                  <li
+                    key={`${record.turn}-${record.pieceId}-${record.to.x}-${record.to.y}`}
+                    className="rounded-2xl border border-white/10 bg-black/30 px-3 py-2 font-mono text-xs"
+                  >
+                    <span className="text-white/60">T{record.turn.toString().padStart(2, '0')} · </span>
+                    <span>{describeMove(record)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-3">
           {pillars.map((pillar) => (
             <article
               key={pillar.title}
               className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white shadow-lg shadow-black/40"
             >
-              <h2 className="text-lg font-semibold text-[var(--color-ember-strong)]">
-                {pillar.title}
-              </h2>
+              <h2 className="text-lg font-semibold text-[var(--color-ember-strong)]">{pillar.title}</h2>
               <p className="mt-3 text-sm text-zinc-200">{pillar.detail}</p>
               <div className="mt-4 h-px w-full bg-gradient-to-r from-transparent via-white/30 to-transparent" />
               <p className="mt-4 text-xs uppercase tracking-[0.3em] text-white/60">Sempre testável</p>
@@ -116,9 +321,7 @@ export default function Home() {
         <section id="cronograma" className="rounded-3xl border border-white/10 bg-black/30 p-6 shadow-inner shadow-black/50">
           <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-[var(--color-ember-strong)]">
-                Próximos rituais
-              </p>
+              <p className="text-xs uppercase tracking-[0.3em] text-[var(--color-ember-strong)]">Próximos rituais</p>
               <h3 className="text-2xl font-semibold text-white">Roadmap de implementação</h3>
             </div>
             <span className="rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-white/80">
@@ -131,9 +334,7 @@ export default function Home() {
                 key={milestone.label}
                 className="rounded-2xl border border-dashed border-white/20 bg-white/5 p-5"
               >
-                <p className="text-xs uppercase tracking-[0.25em] text-white/60">
-                  {milestone.label}
-                </p>
+                <p className="text-xs uppercase tracking-[0.25em] text-white/60">{milestone.label}</p>
                 <p className="mt-2 text-sm text-zinc-200">{milestone.description}</p>
               </article>
             ))}

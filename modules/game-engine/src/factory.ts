@@ -1,24 +1,34 @@
-import { BOARD_SIZE, PIECE_LIBRARY, STARTING_RANK, buildPieceId } from './constants';
-import type { CreateStateInput, GameStateSnapshot, PieceState, PlayerId, Vector2 } from './types';
+import { BACK_RANK, BOARD_SIZE, PIECE_LIBRARY, buildPieceId } from './constants';
+import type {
+  CreateStateInput,
+  GameStateSnapshot,
+  PieceState,
+  PieceType,
+  PlayerId,
+  Vector2
+} from './types';
 
-const createPiecesForPlayer = (
-  playerId: PlayerId,
-  baseline: number,
-  mirrorX = false
-): PieceState[] => {
-  return STARTING_RANK.map((pieceType, index) => {
-    const blueprint = PIECE_LIBRARY[pieceType];
-    const position: Vector2 = {
-      x: mirrorX ? BOARD_SIZE - 1 - index : index,
-      y: baseline
-    };
-    return {
-      ...blueprint,
-      id: buildPieceId(playerId, pieceType, index),
-      ownerId: playerId,
-      position
-    };
-  });
+const createPiece = (playerId: PlayerId, pieceType: PieceType, position: Vector2, index: number): PieceState => ({
+  ...PIECE_LIBRARY[pieceType],
+  id: buildPieceId(playerId, pieceType, index),
+  ownerId: playerId,
+  position,
+  hasMoved: false
+});
+
+const createBackRank = (playerId: PlayerId, baseline: number): PieceState[] =>
+  BACK_RANK.map((pieceType, column) => createPiece(playerId, pieceType, { x: column, y: baseline }, column));
+
+const createPawns = (playerId: PlayerId, pawnRow: number): PieceState[] =>
+  Array.from({ length: BOARD_SIZE }, (_, column) =>
+    createPiece(playerId, 'pawn', { x: column, y: pawnRow }, column)
+  );
+
+const createPiecesForPlayer = (playerId: PlayerId, orientation: 1 | -1): PieceState[] => {
+  const baseRank = orientation === 1 ? 0 : BOARD_SIZE - 1;
+  const pawnRank = baseRank + orientation;
+
+  return [...createBackRank(playerId, baseRank), ...createPawns(playerId, pawnRank)];
 };
 
 export const createInitialState = ({ matchId, players }: CreateStateInput): GameStateSnapshot => {
@@ -27,8 +37,8 @@ export const createInitialState = ({ matchId, players }: CreateStateInput): Game
   }
 
   const [firstPlayer, secondPlayer] = players;
-  const playerOnePieces = createPiecesForPlayer(firstPlayer, 0);
-  const playerTwoPieces = createPiecesForPlayer(secondPlayer, BOARD_SIZE - 1, true);
+  const playerOnePieces = createPiecesForPlayer(firstPlayer, 1);
+  const playerTwoPieces = createPiecesForPlayer(secondPlayer, -1);
 
   return {
     matchId,
@@ -38,6 +48,9 @@ export const createInitialState = ({ matchId, players }: CreateStateInput): Game
     players,
     status: 'in-progress',
     pieces: [...playerOnePieces, ...playerTwoPieces],
-    history: []
+    history: [],
+    resolution: undefined,
+    checkedPlayerId: undefined,
+    winnerId: undefined
   };
 };

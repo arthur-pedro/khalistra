@@ -10,12 +10,15 @@ export const stateToUpdateEvent = (state: GameStateSnapshot): GameEvent<'game:up
       turn: state.turn,
       status: state.status,
       winnerId: state.winnerId,
+      resolution: state.resolution,
+      checkedPlayerId: state.checkedPlayerId,
       activePlayer: state.activePlayer,
       pieces: state.pieces.map((piece) => ({
         id: piece.id,
         ownerId: piece.ownerId,
         type: piece.type,
-        position: piece.position
+        position: piece.position,
+        hasMoved: piece.hasMoved
       }))
     }
   });

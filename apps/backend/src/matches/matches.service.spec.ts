@@ -28,7 +28,7 @@ describe('MatchesService', () => {
       players: PLAYERS,
     });
     const activePiece = state.pieces.find(
-      (piece) => piece.ownerId === PLAYERS[0] && piece.type === 'sentinel',
+      (piece) => piece.ownerId === PLAYERS[0] && piece.type === 'pawn',
     );
     if (!activePiece) {
       throw new Error('Sentinel não encontrado');

@@ -60,19 +60,19 @@ describe('AppController (e2e)', () => {
     expect(created.state.players).toEqual(players);
     expect(created.event.name).toBe('game:update');
 
-    const sentinel = created.state.pieces.find(
-      (piece: PieceState) => piece.ownerId === players[0] && piece.type === 'sentinel',
+    const pawn = created.state.pieces.find(
+      (piece: PieceState) => piece.ownerId === players[0] && piece.type === 'pawn',
     );
-    if (!sentinel) {
-      throw new Error('Sentinel não encontrado');
+    if (!pawn) {
+      throw new Error('Peão não encontrado');
     }
 
     const moveResponse = await fastify.inject({
       method: 'POST',
       url: `/api/matches/${created.matchId}/moves`,
       payload: {
-        pieceId: sentinel.id,
-        to: { x: sentinel.position.x, y: sentinel.position.y + 1 },
+        pieceId: pawn.id,
+        to: { x: pawn.position.x, y: pawn.position.y + 1 },
       },
     });
 
