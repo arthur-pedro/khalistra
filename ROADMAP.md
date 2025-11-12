@@ -24,13 +24,7 @@
 - [ ] **Realtime UI:** conectar-se ao Socket.io, manter otimismo nas jogadas e refletir `checkedPlayerId`, resoluções e desconexões.
 - [ ] **Acessibilidade & UX:** atalhos de teclado, destaques de xeque, replays rápidos e log com filtros (capturas, promoções, xeque-mate).
 
-### 4. Observabilidade & QA
-
-- [ ] **Logs Estruturados Unificados:** padronizar `logStructuredEvent` para incluir trace-id, player-id e resultado do movimento tanto no HTTP quanto no Socket.
-- [ ] **Telemetria Básica:** expor métricas (turnos/partida, duração média, vitórias por cor) via Prometheus e dashboards Grafana mínimos.
-- [ ] **Testes End-to-End:** ampliar Jest E2E ou Playwright para cobrir fluxo completo (criar partida, múltiplos movimentos, finalização e reconexão).
-
-### 5. Preparação para Regras Khalistra
+### 4. Preparação para Regras Khalistra
 
 - [ ] **Contratos Extensíveis:** garantir que `GameStateSnapshot`, eventos e DTOs comportem atributos extras (cartas, mana, estados) sem breaking changes.
 - [ ] **Sistema de Modificadores:** criar esqueleto em `@khalistra/game-engine` para aplicar efeitos (buff/debuff) mesmo que desativado na V1.
