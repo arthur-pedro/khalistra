@@ -1,4 +1,4 @@
-import { Assets, Container, Graphics, Text } from 'pixi.js';
+import { Assets, Container, Graphics, Sprite, Text } from 'pixi.js';
 import type { PieceState } from '@khalistra/game-engine';
 import { BOARD_THEME, PIECE_COLORS, TILE_SIZE } from '../constants';
 import { ensureDefaultAssets, getPieceAlias } from './manifest';
@@ -42,16 +42,25 @@ export const loadPieceContainer = async (
   ensureDefaultAssets();
   const alias = getPieceAlias(setId, piece.ownerId === piece.ownerId ? ('light' as const) : ('shadow' as const), piece.type);
 
+  const sprite = new Container();
+  sprite.eventMode = 'static';
+  sprite.cursor = 'pointer';
+  const targetSize = TILE_SIZE * 0.9;
+
   try {
     const texture = await Assets.load(alias);
-    const sprite = new Container();
-    sprite.eventMode = 'static';
-    sprite.cursor = 'pointer';
-    sprite.width = TILE_SIZE * 0.9;
-    sprite.height = TILE_SIZE * 0.9;
-    sprite.pivot.set(sprite.width / 2, sprite.height / 2);
-    sprite.addChild(texture); // invalid
+    const node = new Sprite(texture);
+    node.anchor.set(0.5);
+    node.width = targetSize;
+    node.height = targetSize;
+    sprite.addChild(node);
   } catch {
-    // fallback to vector
+    const placeholder = new Graphics()
+      .rect(-targetSize / 2, -targetSize / 2, targetSize, targetSize)
+      .fill({ color: 0x888888 })
+      .stroke({ color: BOARD_THEME.border, width: 2 });
+    sprite.addChild(placeholder);
   }
+
+  return sprite;
 };

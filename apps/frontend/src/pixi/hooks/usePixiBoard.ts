@@ -6,7 +6,7 @@ import type { PixiBoardRenderer } from '../types';
 import { createBoardRenderer } from '../factories/createBoardRenderer';
 
 interface UsePixiBoardProps {
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   state?: GameStateSnapshot;
   legalMoves: LegalMove[];
   selectedPieceId?: string;

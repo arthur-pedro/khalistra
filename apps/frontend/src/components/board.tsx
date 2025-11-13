@@ -21,7 +21,7 @@ const MatchBoardComponent = ({
   onSelectPiece,
   onSubmitMove
 }: MatchBoardProps) => {
-  const canvasRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement | null>(null);
   const { ready } = usePixiBoard({
     containerRef: canvasRef,
     state,

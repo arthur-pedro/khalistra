@@ -150,8 +150,10 @@ const getTileFromPointer = (state: GameStateSnapshot, globalX: number, globalY: 
 export const createBoardRenderer = async (
   options: PixiBoardOptions
 ): Promise<PixiBoardRenderer> => {
-  const app = await Application.init({
+  const app = new Application();
+  await app.init({
     backgroundAlpha: 0,
+    preference: 'webgpu',
     hello: process.env.NODE_ENV !== 'production',
     resizeTo: options.container
   });
