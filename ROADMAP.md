@@ -18,11 +18,13 @@
 - [ ] **Ack + Erros padronizados:** cada evento deve ter confirmação ou erro tipado baseado em `@khalistra/shared/types`.
 - [ ] **Replay sob demanda:** permitir que novos clientes obtenham o snapshot mais recente ao assinar o canal da partida.
 
-### 3. Frontend Arena Ritual
+### 3. Frontend Arena Ritual + PixiJS
 
-- [ ] **Client State Store:** mover o estado da partida para Zustand/Jotai para habilitar múltiplos componentes consumindo o mesmo snapshot (tabuleiro, log, HUD, painel de status).
-- [ ] **Realtime UI:** conectar-se ao Socket.io, manter otimismo nas jogadas e refletir `checkedPlayerId`, resoluções e desconexões.
-- [ ] **Acessibilidade & UX:** atalhos de teclado, destaques de xeque, replays rápidos e log com filtros (capturas, promoções, xeque-mate).
+- [x] **Client State Store:** Zustand coordena snapshots, seleção, submissão de jogadas e legal moves compartilhados entre tabuleiro, HUD e log.
+- [x] **Módulo PixiJS:** `src/pixi/**` com `createBoardRenderer`, layers fixos e fallbacks vetoriais para sprites ausentes.
+- [x] **Asset Pipeline:** manifesto e documentação em `public/assets` garantindo que cada sprite/efeito possua alias rastreável.
+- [x] **Realtime UI:** canal de sincronização (polling -> Socket.io) integrado ao store, mantendo o board alinhado com o backend e preparado para troca por websockets assim que o passo 2 estiver pronto.
+- [x] **Acessibilidade & UX:** aria-live para eventos críticos, overlay textual sempre sincronizado, botões de controle e mensagens claras quando sprites ou ações estiverem indisponíveis.
 
 ### 4. Preparação para Regras Khalistra
 

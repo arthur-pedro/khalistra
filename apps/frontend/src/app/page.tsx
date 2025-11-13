@@ -1,18 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  listLegalMoves,
-  type GameStatus,
-  type LegalMove,
-  type MoveRecord,
-  type PlayerId,
-  type Vector2
-} from '@khalistra/game-engine';
+import { useEffect, useMemo } from 'react';
+import { type GameStatus, type MoveRecord, type Vector2 } from '@khalistra/game-engine';
 import { CORE_GAME_EVENTS } from '@khalistra/shared/constants';
 import { MatchBoard } from '../components/board';
-import { createMatch, submitMove, type MatchEnvelope } from '../lib/api';
+import { useMatchStore } from '../state/match-store';
+import { useMatchChannel } from '../lib/realtime/useMatchChannel';
 
 const pillars = [
   {
@@ -45,7 +39,6 @@ const milestones = [
 ];
 
 const ritualEvents = CORE_GAME_EVENTS.slice(0, 3);
-const DEFAULT_PLAYERS: [PlayerId, PlayerId] = ['ritualist-aurora', 'ritualist-umbra'];
 const PLAYER_TITLES = ['Ordem Solar', 'Círculo Umbral'] as const;
 
 const statusLabels: Record<GameStatus, string> = {
@@ -67,67 +60,58 @@ const describeMove = (record: MoveRecord) => {
 };
 
 export default function Home() {
-  const [match, setMatch] = useState<MatchEnvelope | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [selectedPieceId, setSelectedPieceId] = useState<string>();
-  const [error, setError] = useState<string>();
-
-  const spawnMatch = useCallback(async () => {
-    setLoading(true);
-    setSelectedPieceId(undefined);
-    setError(undefined);
-    try {
-      const payload = await createMatch(DEFAULT_PLAYERS);
-      setMatch(payload);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível criar a partida.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const state = useMatchStore((store) => store.state);
+  const matchId = useMatchStore((store) => store.matchId);
+  const loading = useMatchStore((store) => store.loading);
+  const submitting = useMatchStore((store) => store.submitting);
+  const error = useMatchStore((store) => store.error);
+  const legalMoves = useMatchStore((store) => store.legalMoves);
+  const selectedPieceId = useMatchStore((store) => store.selectedPieceId);
+  const spawnMatch = useMatchStore((store) => store.spawnMatch);
+  const selectPiece = useMatchStore((store) => store.selectPiece);
+  const movePiece = useMatchStore((store) => store.submitMove);
+  const ingestMatch = useMatchStore((store) => store.ingestMatch);
+  const setError = useMatchStore((store) => store.setError);
+  const clearError = useMatchStore((store) => store.clearError);
+  const event = useMatchStore((store) => store.event);
 
   useEffect(() => {
     void spawnMatch();
   }, [spawnMatch]);
 
-  const legalMoves: LegalMove[] = useMemo(() => {
-    if (!match?.state || !selectedPieceId) {
-      return [];
-    }
+  useMatchChannel({
+    matchId,
+    enabled: Boolean(matchId && state?.status !== 'completed'),
+    onSnapshot: ingestMatch,
+    onError: (err) => setError(err?.message || 'Falha ao sincronizar estado da partida.')
+  });
 
-    const piece = match.state.pieces.find((candidate) => candidate.id === selectedPieceId);
-    if (!piece || piece.ownerId !== match.state.activePlayer) {
-      return [];
-    }
+  const boardDisabled = loading || submitting || !state || state.status === 'completed';
 
-    return listLegalMoves(match.state, selectedPieceId);
-  }, [match?.state, selectedPieceId]);
-
-  const handleMove = async (pieceId: string, target: Vector2) => {
-    if (!match) {
-      return;
-    }
-
-    setSubmitting(true);
-    setError(undefined);
-    try {
-      const payload = await submitMove(match.matchId, {
-        pieceId,
-        to: target
-      });
-      setMatch(payload);
-      setSelectedPieceId(undefined);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível aplicar o movimento.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const state = match?.state;
   const history = state?.history.slice(-10).reverse() ?? [];
-  const lastUpdate = match?.event.timestamp ? new Date(match.event.timestamp) : undefined;
+  const lastUpdate = event?.timestamp ? new Date(event.timestamp) : undefined;
+
+  const announcement = useMemo(() => {
+    if (!state) {
+      return 'Tabuleiro ritual em preparação.';
+    }
+
+    if (state.status === 'completed') {
+      if (state.resolution?.reason === 'stalemate') {
+        return 'Partida encerrada em empate.';
+      }
+      if (state.winnerId) {
+        return `Vitória de ${state.winnerId} por ${state.resolution?.reason ?? 'finalização'}.`;
+      }
+      return 'Partida concluída.';
+    }
+
+    if (state.checkedPlayerId) {
+      return `Xeque contra ${state.checkedPlayerId}.`;
+    }
+
+    return `Turno de ${state.activePlayer}.`;
+  }, [state]);
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden px-4 py-12 sm:px-6 lg:px-0 lg:py-16">
@@ -194,26 +178,39 @@ export default function Home() {
               </div>
               <div className="text-right text-xs">
                 <p className="text-white/60">Match ID</p>
-                <p className="font-mono text-white">{match?.matchId ?? '–'}</p>
+                <p className="font-mono text-white">{matchId ?? '–'}</p>
               </div>
             </header>
             {error && (
-              <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">
-                {error}
+              <div className="flex items-start justify-between gap-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">
+                <span>{error}</span>
+                <button
+                  type="button"
+                  onClick={clearError}
+                  className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-100 hover:text-white"
+                >
+                  Fechar
+                </button>
               </div>
             )}
             <MatchBoard
               state={state}
               selectedPieceId={selectedPieceId}
               legalMoves={legalMoves}
-              disabled={loading || submitting}
-              onSelectPiece={(pieceId) => setSelectedPieceId(pieceId)}
-              onSubmitMove={handleMove}
+              disabled={boardDisabled}
+              onSelectPiece={selectPiece}
+              onSubmitMove={movePiece}
             />
+            <span aria-live="polite" className="sr-only">
+              {announcement}
+            </span>
             <div className="flex flex-wrap gap-3 text-sm">
               <button
                 type="button"
-                onClick={() => void spawnMatch()}
+                onClick={() => {
+                  clearError();
+                  void spawnMatch();
+                }}
                 disabled={loading}
                 className="rounded-full border border-white/20 px-4 py-2 text-white transition hover:border-white disabled:opacity-50"
               >
@@ -221,7 +218,7 @@ export default function Home() {
               </button>
               <button
                 type="button"
-                onClick={() => setSelectedPieceId(undefined)}
+                onClick={() => selectPiece(undefined)}
                 className="rounded-full border border-white/10 px-4 py-2 text-white/80 transition hover:border-white/40"
               >
                 Limpar seleção
