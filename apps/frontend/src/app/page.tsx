@@ -74,6 +74,7 @@ export default function Home() {
   const setError = useMatchStore((store) => store.setError);
   const clearError = useMatchStore((store) => store.clearError);
   const event = useMatchStore((store) => store.event);
+  const players = useMatchStore((store) => store.players);
 
   useEffect(() => {
     void spawnMatch();
@@ -82,6 +83,7 @@ export default function Home() {
   useMatchChannel({
     matchId,
     enabled: Boolean(matchId && state?.status !== 'completed'),
+    playerId: players[0],
     onSnapshot: ingestMatch,
     onError: (err) => setError(err?.message || 'Falha ao sincronizar estado da partida.')
   });

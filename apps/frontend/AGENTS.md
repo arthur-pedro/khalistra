@@ -25,7 +25,7 @@ Este documento orienta qualquer pessoa (ou agente automatizado) que contribua na
 - `public/assets/`: único local de sprites, com subpastas `boards/`, `pieces/`, `effects/`, `ui/`.
 - `src/lib/api.ts`: mantém chamadas ao backend; qualquer stream realtime futuro vive em `src/lib/realtime`.
 - `src/state/`: stores Zustand (ex.: `match-store`) que concentram snapshots, seleção e submissão de jogadas.
-- `src/lib/realtime/`: canal/polling que será trocado por Socket.io assim que o backend estiver pronto.
+- `src/lib/realtime/`: cliente Socket.io (canal de partidas) responsável por sincronização instantânea e fallback para replay.
 
 ### Estrutura `src/pixi`
 

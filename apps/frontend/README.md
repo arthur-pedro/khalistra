@@ -129,8 +129,8 @@ public/assets/
 ## 8. Estado Global & Realtime
 
 - `src/state/match-store.ts`: estado centralizado via Zustand, responsável por spawnar partidas, aplicar snapshots, selecionar peças e expor `legalMoves` sempre consistentes com o motor.
-- `src/lib/realtime/match-channel.ts`: cliente de polling (substituível por Socket.io na próxima fase) que mantém o frontend sincronizado sem quebrar quando o backend ainda não possui websockets.
-- `src/lib/realtime/useMatchChannel.ts`: hook que habilita/desabilita o canal conforme o status da partida, com fallback seguro quando offline.
+- `src/lib/realtime/match-channel.ts`: cliente Socket.io responsável por handshake `game:join`, replay sob demanda e submissão de movimentos com ACK padronizado.
+- `src/lib/realtime/useMatchChannel.ts`: hook que habilita/desabilita o canal conforme o status da partida, renovando snapshots automaticamente em reconexões.
 - Componentes devem consumir dados somente via `useMatchStore` para evitar duplicar lógica de seleção ou regras.
 
 ---

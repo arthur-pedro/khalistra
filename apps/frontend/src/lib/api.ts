@@ -1,13 +1,9 @@
 import type { GameStateSnapshot, MoveCommand, PlayerId } from '@khalistra/game-engine';
-import type { GameEvent } from '@khalistra/shared/types';
+import type { RealtimeSnapshotEnvelope } from '@khalistra/shared/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001/api';
 
-export interface MatchEnvelope {
-  matchId: string;
-  state: GameStateSnapshot;
-  event: GameEvent<'game:update'>;
-}
+export type MatchEnvelope = RealtimeSnapshotEnvelope<GameStateSnapshot>;
 
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(`${API_BASE_URL}${path}`, {

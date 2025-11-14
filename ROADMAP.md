@@ -8,15 +8,15 @@
 
 ### 1. Estado Persistido & Sessões
 
-- [ ] **Migrations + Seeds:** modelar jogadores, partidas, movimentos e snapshots em PostgreSQL usando Prisma (ou equivalente) com seeds mínimos para testes locais.
-- [ ] **Hydratação via Redis:** ao receber `game:start`, carregar o snapshot clássico do banco e manter o estado volátil no Redis para permitir reconexões rápidas.
-- [ ] **Reidratação automática:** sempre que o backend reiniciar, restaurar partidas em andamento combinando PostgreSQL (histórico) + Redis (estado atual).
+- [x] **Migrations + Seeds:** modelar jogadores, partidas, movimentos e snapshots em PostgreSQL usando Prisma (ou equivalente) com seeds mínimos para testes locais.
+- [x] **Hydratação via Redis:** ao receber `game:start`, carregar o snapshot clássico do banco e manter o estado volátil no Redis para permitir reconexões rápidas.
+- [x] **Reidratação automática:** sempre que o backend reiniciar, restaurar partidas em andamento combinando PostgreSQL (histórico) + Redis (estado atual).
 
 ### 2. Canal Realtime Completo
 
-- [ ] **Handshake Socket.io:** implementar fluxo `game:join -> game:move -> game:update -> game:finish`, sincronizando com o módulo matches existente.
-- [ ] **Ack + Erros padronizados:** cada evento deve ter confirmação ou erro tipado baseado em `@khalistra/shared/types`.
-- [ ] **Replay sob demanda:** permitir que novos clientes obtenham o snapshot mais recente ao assinar o canal da partida.
+- [x] **Handshake Socket.io:** implementar fluxo `game:join -> game:move -> game:update -> game:finish`, sincronizando com o módulo matches existente.
+- [x] **Ack + Erros padronizados:** cada evento deve ter confirmação ou erro tipado baseado em `@khalistra/shared/types`.
+- [x] **Replay sob demanda:** permitir que novos clientes obtenham o snapshot mais recente ao assinar o canal da partida.
 
 ### 3. Frontend Arena Ritual + PixiJS
 

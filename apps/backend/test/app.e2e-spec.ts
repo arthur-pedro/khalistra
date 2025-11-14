@@ -3,6 +3,10 @@ import { AppModule } from './../src/app.module';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import type { GameStateSnapshot, PieceState } from '@khalistra/game-engine';
 import type { GameEvent } from '@khalistra/shared/types';
+import { InMemoryPrismaService } from '../src/testing/in-memory-prisma';
+import { InMemoryRedisService } from '../src/testing/in-memory-redis';
+import { PrismaService } from '../src/prisma/prisma.service';
+import { RedisService } from '../src/redis/redis.service';
 
 interface MatchResponse {
   matchId: string;
@@ -15,11 +19,21 @@ const parsePayload = <T = unknown>(payload: string): T => JSON.parse(payload) as
 
 describe('AppController (e2e)', () => {
   let app: NestFastifyApplication;
+  let prisma: InMemoryPrismaService;
+  let redis: InMemoryRedisService;
 
   beforeEach(async () => {
+    prisma = new InMemoryPrismaService();
+    redis = new InMemoryRedisService();
+    prisma.seedPlayers(['player-a', 'player-b']);
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useValue(prisma)
+      .overrideProvider(RedisService)
+      .useValue(redis)
+      .compile();
 
     app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
     app.setGlobalPrefix('api');

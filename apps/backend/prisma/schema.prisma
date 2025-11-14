@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id             String   @id
+  alias          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  matchesAsLight Match[]  @relation("MatchLight")
+  matchesAsShadow Match[] @relation("MatchShadow")
+}
+
+model Match {
+  id             String   @id
+  lightPlayerId  String
+  shadowPlayerId String
+  status         String   @default("awaiting")
+  activePlayerId String
+  turn           Int      @default(1)
+  winnerId       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  lightPlayer  Player @relation("MatchLight", fields: [lightPlayerId], references: [id])
+  shadowPlayer Player @relation("MatchShadow", fields: [shadowPlayerId], references: [id])
+  moves        MoveRecord[]
+  snapshots    MatchSnapshot[]
+
+  @@index([lightPlayerId])
+  @@index([shadowPlayerId])
+  @@index([status])
+}
+
+model MoveRecord {
+  id        Int      @id @default(autoincrement())
+  matchId   String
+  actorId   String
+  pieceId   String
+  turn      Int
+  payload   Json
+  createdAt DateTime @default(now())
+
+  match Match @relation(fields: [matchId], references: [id])
+
+  @@index([matchId])
+  @@index([matchId, turn])
+}
+
+model MatchSnapshot {
+  id        Int          @id @default(autoincrement())
+  matchId   String
+  turn      Int
+  kind      SnapshotKind @default(RUNTIME)
+  state     Json
+  createdAt DateTime      @default(now())
+
+  match Match @relation(fields: [matchId], references: [id])
+
+  @@index([matchId])
+  @@index([matchId, turn])
+}
+
+enum SnapshotKind {
+  INIT
+  RUNTIME
+}

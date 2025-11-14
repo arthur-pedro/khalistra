@@ -1,7 +1,10 @@
+'use client';
+
 import { create } from 'zustand';
 import { listLegalMoves, type GameStateSnapshot, type LegalMove, type PlayerId, type Vector2 } from '@khalistra/game-engine';
 import type { MatchEnvelope } from '../lib/api';
 import { createMatch, submitMove } from '../lib/api';
+import { getMatchRealtimeClient } from '../lib/realtime/match-channel';
 
 const DEFAULT_PLAYERS: [PlayerId, PlayerId] = ['ritualist-aurora', 'ritualist-umbra'];
 
@@ -88,13 +91,28 @@ export const useMatchStore = create<MatchStore>((set, get) => ({
   },
   submitMove: async (pieceId, target) => {
     const matchId = get().matchId;
+    const players = get().players;
     if (!matchId) {
       return;
     }
 
     set({ submitting: true, error: undefined });
     try {
-      const payload = await submitMove(matchId, { pieceId, to: target });
+      let payload: MatchEnvelope | undefined;
+      const realtime = getMatchRealtimeClient();
+
+      if (realtime) {
+        try {
+          payload = await realtime.submitMove(matchId, { pieceId, to: target }, players[0]);
+        } catch (error) {
+          console.warn('Falha no envio realtime, tentando fallback HTTP.', error);
+        }
+      }
+
+      if (!payload) {
+        payload = await submitMove(matchId, { pieceId, to: target });
+      }
+
       get().ingestMatch(payload);
       set({ selectedPieceId: undefined, legalMoves: [] });
     } catch (error) {

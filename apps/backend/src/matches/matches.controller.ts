@@ -1,6 +1,12 @@
 import { BadRequestException, Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { stateToUpdateEvent, type MoveCommand, type PlayerId } from '@khalistra/game-engine';
+import {
+  stateToUpdateEvent,
+  type GameStateSnapshot,
+  type MoveCommand,
+  type PlayerId,
+} from '@khalistra/game-engine';
+import type { RealtimeSnapshotEnvelope } from '@khalistra/shared/types';
 import { MatchesService } from './matches.service';
 import type { CreateMatchDto, SubmitMoveDto } from './dto';
 
@@ -32,28 +38,33 @@ const assertMovePayload = (payload: SubmitMoveDto): payload is Required<SubmitMo
   return true;
 };
 
+type MatchEnvelope = RealtimeSnapshotEnvelope<GameStateSnapshot>;
+
 @Controller('matches')
 export class MatchesController {
   constructor(private readonly matchesService: MatchesService) {}
 
   @Post()
-  createMatch(@Body() body: CreateMatchDto) {
+  async createMatch(@Body() body: CreateMatchDto): Promise<MatchEnvelope> {
     const matchId = body.matchId ?? randomUUID();
     const players = toPlayerTuple(body.players);
-    const state = this.matchesService.createMatch({ matchId, players });
+    const state = await this.matchesService.createMatch({ matchId, players });
 
     return this.buildResponse(state);
   }
 
   @Get(':matchId')
-  getMatch(@Param('matchId') matchId: string) {
-    const state = this.matchesService.getMatchState(matchId);
+  async getMatch(@Param('matchId') matchId: string): Promise<MatchEnvelope> {
+    const state = await this.matchesService.getMatchState(matchId);
     return this.buildResponse(state);
   }
 
   @Post(':matchId/moves')
   @HttpCode(200)
-  submitMove(@Param('matchId') matchId: string, @Body() body: SubmitMoveDto) {
+  async submitMove(
+    @Param('matchId') matchId: string,
+    @Body() body: SubmitMoveDto,
+  ): Promise<MatchEnvelope> {
     if (assertMovePayload(body)) {
       const command: MoveCommand = {
         pieceId: body.pieceId,
@@ -62,14 +73,14 @@ export class MatchesController {
         promoteTo: body.promoteTo,
       };
 
-      const state = this.matchesService.submitMove(matchId, command);
+      const state = await this.matchesService.submitMove(matchId, command);
       return this.buildResponse(state);
     }
 
     throw new BadRequestException('Payload inválido.');
   }
 
-  private buildResponse(state: ReturnType<MatchesService['getMatchState']>) {
+  private buildResponse(state: GameStateSnapshot): MatchEnvelope {
     return {
       matchId: state.matchId,
       state,

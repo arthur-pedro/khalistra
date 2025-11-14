@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import { AppModule } from './app.module';
@@ -18,6 +19,7 @@ async function bootstrap() {
     credentials: true,
   });
 
+  app.useWebSocketAdapter(new IoAdapter(app));
   app.setGlobalPrefix('api');
 
   await app.listen({

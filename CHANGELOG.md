@@ -10,6 +10,8 @@
 - Atualização completa do `@khalistra/game-engine` para o tabuleiro 8×8 com regras clássicas, geração de jogadas legais (`listLegalMoves`), detecção de xeque/xeque-mate/empate e cobertura Jest refletindo os novos contratos.
 - Backend NestJS agora aceita promoções, reflete o motivo real de término nas métricas/`game:finish` e mantém compatibilidade com o estado enriquecido do engine.
 - Frontend Next.js convertido em um laboratório jogável com tabuleiro interativo, destaque de movimentos, painel de jogadores/histórico e integração direta com a API de partidas usando o módulo de engine compartilhado.
+- Gateway Socket.io no backend NestJS com eventos `game:join`, `game:move`, `game:update`, `game:finish` e `game:replay`, broadcastando snapshots completos e logs estruturados.
+- Tipos compartilhados para ACKs/exceções (`GameSocketAck`, `GameGatewayErrorCode`, envelopes realtime) permitindo que clientes e serviços tratem erros com o mesmo contrato.
 
 ### Fixed
 - Configuração do pacote `@khalistra/shared` como workspace válido com `package.json`, `tsconfig.json` e `eslint.config.mjs` apropriados.
@@ -19,8 +21,9 @@
 - Ajuste do ESLint config no shared para usar path absoluto correto e ignorar arquivos `.d.ts` e `.js` gerados.
 - Conversão do `next.config.ts` para `next.config.js` para evitar problemas de transpilação no container.
 - Adição de `--passWithNoTests` nos scripts de teste para permitir execução sem arquivos de teste.
+- Frontend Next.js agora consome o canal realtime via Socket.io com fallback HTTP apenas quando necessário, eliminando polling e garantindo replay automático em reconexões.
 
 ### Next Steps
-1. Adicionar migrations e seeds iniciais (jogadores, partidas e estados) no PostgreSQL e conectá-las ao Redis para reidratar o tabuleiro clássico a cada `game:start`.
-2. Expor um handshake completo `game:join -> game:move -> game:update -> game:finish` via Socket.io/Fastify, persistindo turnos no Postgres e sincronizando o estado transiente pelo Redis.
-3. Mapear o backlog pós-MVP destacando evoluções de regras dinâmicas (cartas, rituais e modificadores) e dependências técnicas para ativá-las sem quebrar o MVP.
+1. Garantir contratos extensíveis no `GameStateSnapshot`, DTOs e eventos para suportar atributos extras (mana, cartas, modificadores) sem breaking changes.
+2. Iniciar o esqueleto do sistema de modificadores/rituais no `@khalistra/game-engine`, mesmo que ainda desativado para o MVP.
+3. Documentar no README/AGENTS como ativar novas regras via feature flags e mapear o backlog pós-MVP com foco nas evoluções de cartas e rituais.

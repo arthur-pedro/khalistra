@@ -1,17 +1,30 @@
 import type { PlayerId } from '@khalistra/game-engine';
 import { MatchesService } from './matches.service';
+import { InMemoryPrismaService } from '../testing/in-memory-prisma';
+import { InMemoryRedisService } from '../testing/in-memory-redis';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 
 const PLAYERS: [PlayerId, PlayerId] = ['player-a', 'player-b'];
 
 describe('MatchesService', () => {
   let service: MatchesService;
+  let prisma: InMemoryPrismaService;
+  let redis: InMemoryRedisService;
 
-  beforeEach(() => {
-    service = new MatchesService();
+  beforeEach(async () => {
+    prisma = new InMemoryPrismaService();
+    prisma.seedPlayers(PLAYERS);
+    redis = new InMemoryRedisService();
+    service = new MatchesService(
+      prisma as unknown as PrismaService,
+      redis as unknown as RedisService,
+    );
+    await service.onModuleInit();
   });
 
-  it('creates and stores a new match state', () => {
-    const state = service.createMatch({
+  it('creates and stores a new match state', async () => {
+    const state = await service.createMatch({
       matchId: 'match-1',
       players: PLAYERS,
     });
@@ -19,11 +32,11 @@ describe('MatchesService', () => {
     expect(state.matchId).toBe('match-1');
     expect(state.history).toHaveLength(0);
     expect(state.players).toEqual(PLAYERS);
-    expect(() => service.getMatchState('match-1')).not.toThrow();
+    await expect(service.getMatchState('match-1')).resolves.toHaveProperty('matchId', 'match-1');
   });
 
-  it('applies moves sequentially using the engine', () => {
-    const state = service.createMatch({
+  it('applies moves sequentially using the engine', async () => {
+    const state = await service.createMatch({
       matchId: 'match-2',
       players: PLAYERS,
     });
@@ -34,7 +47,7 @@ describe('MatchesService', () => {
       throw new Error('Sentinel não encontrado');
     }
 
-    const updated = service.submitMove('match-2', {
+    const updated = await service.submitMove('match-2', {
       pieceId: activePiece.id,
       to: { x: activePiece.position.x, y: activePiece.position.y + 1 },
     });
