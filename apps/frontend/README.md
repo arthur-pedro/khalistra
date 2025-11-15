@@ -135,4 +135,27 @@ public/assets/
 
 ---
 
+## 9. Cenas do Frontend
+
+O frontend agora é estruturado em **cenas** sob `src/scenes/`, evitando qualquer camada de “site” separada do jogo. Cada cena encapsula seu próprio layout e interações:
+
+- `MainMenuScene`: ponto de entrada do cliente, responsável por iniciar treino rápido (`spawnMatch`) ou navegar para formulários de sala.
+- `CreateRoomScene` / `JoinRoomScene`: formulários dedicados para gerar ou ingressar em lobbies, usando apenas estado do `room-store`.
+- `LobbyScene`: sala de espera que mostra slots de anfitrião/convidado, countdown (`useCountdown`) e botão de start (host chama `startMatch` e injeta o snapshot no `match-store`).
+- `MatchScene`: integra o `MatchBoard` (PixiJS) e o HUD com histórico, status e players. Todo o controle de peças continua vindo do `match-store`.
+- `SettingsOverlay`: painel modal que guarda preferências locais de HUD. Não existe outra tela “de site” além dessas cenas.
+
+Sempre adicione novas cenas dentro de `src/scenes/` e exponha-as via `src/scenes/index.ts` para manter a organização consistente.
+
+## 10. Checklist de Assets consumidos
+
+As cenas dependem dos mesmos manifests Pixi documentados anteriormente, mas agora o fluxo completo do jogo ocorre imediatamente ao abrir o app. Garanta que os assets abaixo existam (com fallbacks já implementados):
+
+- `public/assets/boards/default/atlas.json`: skin padrão do tabuleiro (`MatchBoard` cai para este atlas quando a skin solicitada não existe).
+- `public/assets/pieces/default/<color>-<piece>.png`: sprites base de cada peça. Ausências caem para vetores do `piece.ts`.
+- `public/assets/effects/`: manifeste os efeitos ativos aqui; se um efeito solicitado não existir, a HUD usa glow genérico automaticamente.
+- `public/assets/ui/icons/`: ícones e ornamentos da HUD. Ausências são substituídas por chip textual para manter a UI acessível.
+
+Documente qualquer novo asset adicionado e sempre mantenha o fallback para que o jogo continue funcional mesmo sem sprites específicos.
+
 Revisitar este README sempre que novos tipos de assets forem introduzidos (cartas, rituais, partículas) para manter o pipeline padronizado.
