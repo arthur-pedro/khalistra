@@ -27,8 +27,6 @@ import {
   type MatchesEventEmitter,
 } from '../matches/matches.events';
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
-
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_LENGTH = 6;
 const LOBBY_TTL_MS = 15 * 60 * 1000;
@@ -137,7 +135,7 @@ export class RoomsService implements OnModuleDestroy {
   }
 
   async startMatch(code: string, secret: string): Promise<RoomStartResponse<MatchEnvelope>> {
-    const sanitizedSecret = secret?.trim();
+    const sanitizedSecret = secret.trim();
     if (!sanitizedSecret) {
       throw new BadRequestException('Token do anfitrião é obrigatório.');
     }
@@ -287,7 +285,7 @@ export class RoomsService implements OnModuleDestroy {
   }
 
   private normalizeCodename(raw: string) {
-    const value = raw?.trim();
+    const value = raw.trim();
     if (!value) {
       throw new BadRequestException('Escolha um codinome para entrar na sala.');
     }
@@ -300,9 +298,11 @@ export class RoomsService implements OnModuleDestroy {
   }
 
   private normalizeCode(raw: string) {
-    const value = raw?.trim().toUpperCase();
+    const value = raw.trim().toUpperCase();
     if (!value || !/^[A-Z0-9]{6,8}$/.test(value)) {
-      throw new BadRequestException('Código de sala deve conter de 6 a 8 caracteres alfanuméricos.');
+      throw new BadRequestException(
+        'Código de sala deve conter de 6 a 8 caracteres alfanuméricos.',
+      );
     }
     return value;
   }
@@ -326,12 +326,13 @@ export class RoomsService implements OnModuleDestroy {
         seat: 'host',
         playerId: room.hostPlayerId,
         codename: room.hostDisplayName,
-        joinedAt: (room.hostJoinedAt ?? room.createdAt).toISOString(),
+        joinedAt: (room.hostJoinedAt || room.createdAt).toISOString(),
       },
       guest: room.guestPlayerId
         ? {
             seat: 'guest',
             playerId: room.guestPlayerId,
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             codename: room.guestDisplayName ?? 'Convidado',
             joinedAt: (room.guestJoinedAt ?? room.updatedAt).toISOString(),
           }
@@ -355,5 +356,3 @@ export class RoomsService implements OnModuleDestroy {
     });
   }
 }
-
-/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */

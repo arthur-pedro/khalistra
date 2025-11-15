@@ -139,7 +139,8 @@ export class InMemoryPrismaService {
     create: ({
       data,
     }: {
-      data: Partial<RoomRow> & Pick<RoomRow, 'code' | 'hostPlayerId' | 'hostDisplayName' | 'hostSecret' | 'expiresAt'>;
+      data: Partial<RoomRow> &
+        Pick<RoomRow, 'code' | 'hostPlayerId' | 'hostDisplayName' | 'hostSecret' | 'expiresAt'>;
     }) => {
       const now = new Date();
       const record: RoomRow = {

@@ -4,6 +4,18 @@
 - **RoomsModule + Prisma:** novo modelo `Room`, enum `RoomStatus`, service/controller NestJS com geração de códigos, lobby persistido e testes unitários usando os doubles in-memory.
 - **Launcher Desktop:** menu lateral fixo, formulários de criar/entrar em sala, lobby com cópia de código e painel de status/match integrado ao estado do `MatchBoard`, tudo com tema dark “cliente Steam”.
 
+## [Unreleased] - 2025-11-15
+
+### Added
+- **Electron Desktop App** (`@khalistra/desktop`): Wrapper desktop completo para distribuição Steam
+  - BrowserWindow customizada (1280x720) com controles nativos
+  - Preload script com contextBridge para comunicação segura IPC
+  - electron-builder configurado para builds Windows (.exe), Mac (.dmg) e Linux (.AppImage)
+  - electron-store para persistência de configurações de janela
+  - Auto-updater integrado para atualizações pós-lançamento
+  - Configuração steam-ready com electron-builder.steam.js
+  - Suporte a múltiplas instâncias prevenido e restauração de janela
+
 ### Changed
 - **ROADMAP atualizado:** redefinido o objetivo final para lançamento na Steam com foco em jogo desktop profissional.
 - **Sistema de Salas:** especificado sistema de criação de salas com código (6-8 caracteres) para V1, substituindo matchmaking imediato.

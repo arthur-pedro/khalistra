@@ -52,7 +52,7 @@
 
 ### 6. Infraestrutura Steam & Distribuição
 
-- [ ] **Electron Desktop Wrapper:** 
+- [x] **Electron Desktop Wrapper:** 
   - Configurar Electron para empacotar o Next.js como aplicação desktop nativa
   - Implementar main process com BrowserWindow customizada (1280x720, sem frame padrão)
   - Configurar preload script para comunicação segura entre renderer e main process

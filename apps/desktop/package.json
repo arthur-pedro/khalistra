@@ -1,0 +1,62 @@
+{
+  "name": "@khalistra/desktop",
+  "version": "0.1.0",
+  "description": "Khalistra Desktop - Steam Edition",
+  "main": "src/main/main.js",
+  "homepage": "./",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"pnpm dev:next\" \"wait-on http://localhost:3000 && pnpm dev:electron\"",
+    "dev:next": "cd ../frontend && pnpm dev",
+    "dev:electron": "cross-env NODE_ENV=development electron .",
+    "build": "pnpm build:next && pnpm build:electron",
+    "build:next": "cd ../frontend && pnpm build",
+    "build:electron": "tsc -p tsconfig.build.json",
+    "build:prod": "pnpm build && electron-builder",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --publish=never",
+    "steam:build": "pnpm build && electron-builder --config electron-builder.steam.js",
+    "clean": "rimraf dist dist-steam out",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "electron-log": "^5.0.0",
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "concurrently": "^8.2.0",
+    "cross-env": "^7.0.3",
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.0",
+    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.0",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.khalistra.game",
+    "productName": "Khalistra",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "assets/**/*",
+      {
+        "from": "../frontend/out",
+        "to": "frontend",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "extraMetadata": {
+      "main": "src/main/main.js"
+    }
+  }
+}
