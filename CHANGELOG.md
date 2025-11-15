@@ -1,4 +1,13 @@
-## [Unreleased] - 2025-11-12
+## [Unreleased] - 2025-11-15
+
+### Changed
+- **ROADMAP atualizado:** redefinido o objetivo final para lançamento na Steam com foco em jogo desktop profissional.
+- **Sistema de Salas:** especificado sistema de criação de salas com código (6-8 caracteres) para V1, substituindo matchmaking imediato.
+- **Interface Desktop:** adicionado requisito de menu principal nativo e remoção de elementos "web-like" para aparência profissional.
+- **Electron Integration:** especificado uso detalhado do Electron na Fase 6, incluindo BrowserWindow customizada, preload scripts, electron-builder e integração Steam SDK.
+- **Fases Futuras:** reorganizado roadmap incluindo integração Steam SDK, matchmaking ranqueado e monetização.
+
+## [Previous] - 2025-11-12
 
 ### Added
 - `.dockerignore` para reduzir o contexto enviado ao Docker e acelerar builds.

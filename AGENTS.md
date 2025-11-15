@@ -63,6 +63,8 @@ O sistema segue uma **arquitetura orientada a módulos**, com camadas bem defini
 
 - **Sempre prever usabilidade e UI com e sem sprites configurados**.
 
+- **O objetivo final do projeto é lançar o jogo nan steam**
+
 ---
 
 ## 3. Diretrizes para o Código
@@ -79,19 +81,6 @@ O sistema segue uma **arquitetura orientada a módulos**, com camadas bem defini
 - **ESLint + Prettier** são mandatórios.
 - Padrão de importação organizado e sem imports não utilizados.
 - Nunca comentar código sem necessidade — prefira tornar o código autoexplicativo.
-
----
-
-## 4. Fluxo de Desenvolvimento
-
-| Etapa | Ação |
-|------|------|
-| 1 | Criar branch a partir de `main` usando naming conventions (`feature/`, `fix/`, `refactor/`). |
-| 2 | Implementar seguindo padrões definidos aqui. |
-| 3 | Criar testes unitários para toda lógica crítica. |
-| 4 | Criar PR com descrição clara do que foi feito. |
-| 5 | Revisão por outro dev (ou agente revisor automatizado). |
-| 6 | Merge só após aprovação + CI verde. |
 
 ---
 
