@@ -15,16 +15,19 @@ COPY shared ./shared
 RUN pnpm install --frozen-lockfile
 
 FROM deps AS build
+# Generate Prisma client before building
+RUN pnpm --filter @khalistra/backend exec prisma generate
 RUN pnpm --filter @khalistra/backend build
 RUN pnpm deploy --filter @khalistra/backend --prod /out/backend
 # Copy shared module to the deployment
 COPY --from=deps /app/shared /out/backend/shared
+RUN cd /out/backend && npx prisma generate
 
 FROM node:22-alpine AS runtime
 WORKDIR /srv/app
 ENV NODE_ENV=production
 ENV PORT=3001
-RUN apk add --no-cache dumb-init curl
+RUN apk add --no-cache dumb-init curl openssl
 COPY --from=build /out/backend ./
 RUN mkdir -p node_modules/@khalistra \
   && rm -rf node_modules/@khalistra/game-engine \

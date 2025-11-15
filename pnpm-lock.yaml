@@ -44,6 +44,9 @@ importers:
       '@prisma/client':
         specifier: ^5.20.0
         version: 5.22.0(prisma@5.22.0)
+      prisma:
+        specifier: ^5.20.0
+        version: 5.22.0
       ioredis:
         specifier: ^5.4.1
         version: 5.8.2
@@ -99,9 +102,6 @@ importers:
       prettier:
         specifier: ^3.4.2
         version: 3.6.2
-      prisma:
-        specifier: ^5.20.0
-        version: 5.22.0
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21

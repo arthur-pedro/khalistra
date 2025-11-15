@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = "linux-musl-openssl-3.0.x"
 }
 
 datasource db {
@@ -14,6 +15,8 @@ model Player {
   updatedAt      DateTime @updatedAt
   matchesAsLight Match[]  @relation("MatchLight")
   matchesAsShadow Match[] @relation("MatchShadow")
+
+  @@map("players")
 }
 
 model Match {
@@ -35,6 +38,8 @@ model Match {
   @@index([lightPlayerId])
   @@index([shadowPlayerId])
   @@index([status])
+
+  @@map("matches")
 }
 
 model MoveRecord {
@@ -50,6 +55,8 @@ model MoveRecord {
 
   @@index([matchId])
   @@index([matchId, turn])
+
+  @@map("move_records")
 }
 
 model MatchSnapshot {
@@ -64,6 +71,8 @@ model MatchSnapshot {
 
   @@index([matchId])
   @@index([matchId, turn])
+
+  @@map("match_snapshots")
 }
 
 enum SnapshotKind {

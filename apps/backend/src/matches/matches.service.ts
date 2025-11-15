@@ -12,6 +12,7 @@ import { applyMove, createInitialState, stateToUpdateEvent } from '@khalistra/ga
 import type { GameStateSnapshot, MoveCommand, PlayerId } from '@khalistra/game-engine';
 import { buildGameEvent, type GameEvent } from '@khalistra/shared/types';
 import { logStructuredEvent } from '@khalistra/shared/utils';
+import type { InputJsonValue, JsonValue } from '@prisma/client/runtime/library';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import {
@@ -125,7 +126,7 @@ export class MatchesService implements OnModuleInit {
           actorId: currentState.activePlayer,
           pieceId: command.pieceId,
           turn: updatedState.turn,
-        payload: lastMove as unknown as SerializedState,
+          payload: lastMove as unknown as SerializedState,
         },
       });
     }
@@ -213,7 +214,10 @@ export class MatchesService implements OnModuleInit {
     return state as unknown as SerializedState;
   }
 
-  private deserializeState(payload: SerializedState): GameStateSnapshot {
+  private deserializeState(payload: PersistedState): GameStateSnapshot {
+    if (payload === null) {
+      throw new NotFoundException('Snapshot de partida inválido.');
+    }
     return payload as unknown as GameStateSnapshot;
   }
 
@@ -253,4 +257,5 @@ type SnapshotKind = 'INIT' | 'RUNTIME';
 
 const SNAPSHOT_INIT: SnapshotKind = 'INIT';
 const SNAPSHOT_RUNTIME: SnapshotKind = 'RUNTIME';
-type SerializedState = Record<string, unknown>;
+type SerializedState = InputJsonValue;
+type PersistedState = JsonValue;

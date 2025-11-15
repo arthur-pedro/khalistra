@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 import { PrismaClient } from '@prisma/client';
 import { createInitialState, type GameStateSnapshot, type PlayerId } from '@khalistra/game-engine';
+import type { InputJsonValue } from '@prisma/client/runtime/library';
 
 const prisma = new PrismaClient();
 
@@ -11,8 +11,8 @@ const PLAYERS: Array<{ id: PlayerId; alias: string }> = [
 
 const DEMO_MATCH_ID = 'demo-classic';
 
-const serializeSnapshot = (state: GameStateSnapshot): Record<string, unknown> =>
-  state as unknown as Record<string, unknown>;
+const serializeSnapshot = (state: GameStateSnapshot): InputJsonValue =>
+  state as unknown as InputJsonValue;
 
 async function seed() {
   await prisma.moveRecord.deleteMany();

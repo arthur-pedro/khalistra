@@ -1,8 +1,3 @@
-]
-Nesta fase não criaremos cartas específicas ainda — apenas definiremos **como elas funcionam**, como o jogador as usa e quais regras mantêm o jogo justo e estratégico.
-
----
-
 ## **5. Economia e Progressão**
 
 A economia de Khalistra determina **como os jogadores ganham recursos durante a partida** e **como utilizam esses recursos para modificar o estado do jogo**.
@@ -11,25 +6,27 @@ A economia de Khalistra determina **como os jogadores ganham recursos durante a 
 
 |Termo|Função|
 |---|---|
-|**Energia**|Recurso utilizado para jogar cartas ou ativar habilidades|
+|**Tempo**|Recurso utilizado para jogar cartas ou ativar habilidades|
 |**Cartas**|Efeitos táticos que alteram peças, tabuleiro ou estado da partida|
 |**Crescimento da Peça**|Evolução permanente adquirida durante o jogo|
 |**Escalonamento de Partida**|Quanto mais a partida avança, mais forte as peças podem se tornar|
 
 ---
 
-### **5.2 Energia**
+### **5.2 Tempo**
 
-A **Energia** é o recurso principal.  
-Ela não representa mana, magia ou poder místico — ela representa **o foco estratégico do jogador**.
+O **Tempo** é o recurso principal.  
+Ela não representa mana, magia ou poder místico — ela representa **o Tempo estratégico do jogador** para realizar uma ação.
 
 |Propriedade|Descrição|
 |---|---|
-|**Ganho por turno**|+1 Energia por turno, até máximo de 10|
-|**Acúmulo**|Energia não usada é armazenada|
+|**Ganho por turno**|+1 minuto por turno, até máximo de 10min|
+|**Acúmulo**|Tempo não usado é armazenado|
 |**Uso**|Jogar cartas ou ativar habilidades de evolução|
 
-Justificativa: avanço gradual, impacto crescente, sem snowball precoce.
+Justificativa: avanço gradual, impacto crescente, sem snowball precoce. Deixar claro o peso do tempo, conceito clássico do xadrez, mas também de TCGs. Gastar tempo para ativar uma habilidade
+indica que você estra trocando o seu tempo, literalmente, para ganhar algo em troca dentro 
+do jogo.
 
 ---
 

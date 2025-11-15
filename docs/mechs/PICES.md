@@ -97,7 +97,7 @@ Recursos são elementos externos ao tabuleiro que afetam decisões.
 
 |Recurso|Função|
 |---|---|
-|**Mana / Energia**|Gasta para ativar habilidades ou cartas|
+|**Tempo**|Gasta para ativar habilidades ou cartas|
 |**Cartas / Poderes**|Efeitos de modificação temporária ou imediata|
 |**Sorte / Aleatoriedade Controlada**|Introduz variação sem prejudicar clareza|
 

@@ -95,6 +95,7 @@ A partida termina empatada se:
 |**Afogamento (Stalemate)**|O jogador não está em xeque, mas não pode realizar movimentos válidos|
 |**Repetição de Movimento**|A mesma posição ocorre 3 vezes consecutivas com a mesma ordem de jogadas|
 |**Insuficiência de Material**|Nenhum dos jogadores possui peças suficientes para vencer (ex.: Rei vs Rei)|
+|**Tempo**|O jogador fica sem "tempo", chegando a zero (ou menor), seja pela demora da decisão, ou usar recursos de forma exagerada
 
 ---
 
