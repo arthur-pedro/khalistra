@@ -30,14 +30,14 @@
 
 ### 4. Interface Desktop & Sistema de Salas
 
-- [ ] **Menu Principal Nativo:** criar interface inicial profissional com opções "Criar Partida", "Entrar em Partida", "Configurações" e "Sair".
-- [ ] **Sistema de Código de Sala:** implementar geração de códigos únicos de 6-8 caracteres para criação de salas privadas.
-- [ ] **Fluxo Host/Cliente:** 
+- [x] **Menu Principal Nativo:** criar interface inicial profissional com opções "Criar Partida", "Entrar em Partida", "Configurações" e "Sair".
+- [x] **Sistema de Código de Sala:** implementar geração de códigos únicos de 6-8 caracteres para criação de salas privadas.
+- [x] **Fluxo Host/Cliente:** 
   - Host cria sala e recebe código
   - Cliente insere código e entra na sala
   - Validação e feedback visual para códigos inválidos/expirados
-- [ ] **Lobby de Espera:** tela intermediária mostrando jogadores conectados antes do início da partida.
-- [ ] **Aparência Desktop:** remover todos os elementos "web-like", aplicar temas escuros/profissionais, tipografia gaming.
+- [x] **Lobby de Espera:** tela intermediária mostrando jogadores conectados antes do início da partida.
+- [x] **Aparência Desktop:** remover todos os elementos "web-like", aplicar temas escuros/profissionais, tipografia gaming.
 
 ### 5. Preparação para Regras Khalistra
 

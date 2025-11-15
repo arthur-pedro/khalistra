@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3
 
 export type MatchEnvelope = RealtimeSnapshotEnvelope<GameStateSnapshot>;
 
-const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
+export const apiRequest = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
@@ -28,15 +28,15 @@ const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
 };
 
 export const createMatch = (players: [PlayerId, PlayerId]): Promise<MatchEnvelope> =>
-  request('/matches', {
+  apiRequest('/matches', {
     method: 'POST',
     body: JSON.stringify({ players })
   });
 
-export const fetchMatch = (matchId: string): Promise<MatchEnvelope> => request(`/matches/${matchId}`);
+export const fetchMatch = (matchId: string): Promise<MatchEnvelope> => apiRequest(`/matches/${matchId}`);
 
 export const submitMove = (matchId: string, payload: MoveCommand): Promise<MatchEnvelope> =>
-  request(`/matches/${matchId}/moves`, {
+  apiRequest(`/matches/${matchId}/moves`, {
     method: 'POST',
     body: JSON.stringify(payload)
   });

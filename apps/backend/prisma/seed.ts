@@ -18,6 +18,7 @@ async function seed() {
   await prisma.moveRecord.deleteMany();
   await prisma.matchSnapshot.deleteMany();
   await prisma.match.deleteMany();
+  await prisma.room.deleteMany();
   await prisma.player.deleteMany();
 
   await Promise.all(

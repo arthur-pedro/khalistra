@@ -39,3 +39,13 @@ body {
   filter: blur(80px);
   opacity: 0.6;
 }
+
+.grid-lines {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 80px 80px;
+  opacity: 0.2;
+  pointer-events: none;
+}

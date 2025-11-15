@@ -205,8 +205,19 @@ export class MatchesService implements OnModuleInit {
       where: { id: { in: players } },
       select: { id: true },
     });
-    if (found.length !== players.length) {
-      throw new BadRequestException('Jogadores informados não existem no banco de dados.');
+    const existingIds = new Set(found.map((player) => player.id));
+    const missing = players.filter((playerId) => !existingIds.has(playerId));
+    if (missing.length) {
+      await Promise.all(
+        missing.map((playerId) =>
+          this.prisma.player.create({
+            data: {
+              id: playerId,
+              alias: playerId,
+            },
+          }),
+        ),
+      );
     }
   }
 

@@ -15,6 +15,8 @@ model Player {
   updatedAt      DateTime @updatedAt
   matchesAsLight Match[]  @relation("MatchLight")
   matchesAsShadow Match[] @relation("MatchShadow")
+  roomsAsHost    Room[]   @relation("RoomHost")
+  roomsAsGuest   Room[]   @relation("RoomGuest")
 
   @@map("players")
 }
@@ -34,6 +36,7 @@ model Match {
   shadowPlayer Player @relation("MatchShadow", fields: [shadowPlayerId], references: [id])
   moves        MoveRecord[]
   snapshots    MatchSnapshot[]
+  room         Room?    @relation("RoomMatch")
 
   @@index([lightPlayerId])
   @@index([shadowPlayerId])
@@ -78,4 +81,38 @@ model MatchSnapshot {
 enum SnapshotKind {
   INIT
   RUNTIME
+}
+
+enum RoomStatus {
+  WAITING
+  READY
+  IN_MATCH
+  CLOSED
+  EXPIRED
+}
+
+model Room {
+  id               String     @id @default(uuid())
+  code             String     @unique
+  status           RoomStatus @default(WAITING)
+  matchId          String?
+  hostPlayerId     String
+  guestPlayerId    String?
+  hostDisplayName  String
+  guestDisplayName String?
+  hostSecret       String
+  guestSecret      String?
+  hostJoinedAt     DateTime  @default(now())
+  guestJoinedAt    DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  expiresAt        DateTime
+
+  match       Match?  @relation("RoomMatch", fields: [matchId], references: [id])
+  hostPlayer  Player  @relation("RoomHost", fields: [hostPlayerId], references: [id])
+  guestPlayer Player? @relation("RoomGuest", fields: [guestPlayerId], references: [id])
+
+  @@unique([matchId])
+  @@index([status])
+  @@map("rooms")
 }

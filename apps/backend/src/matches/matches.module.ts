@@ -17,6 +17,6 @@ import { createMatchesEventEmitter, MATCHES_EVENT_EMITTER } from './matches.even
       useFactory: createMatchesEventEmitter,
     },
   ],
-  exports: [MatchesService],
+  exports: [MatchesService, MATCHES_EVENT_EMITTER],
 })
 export class MatchesModule {}

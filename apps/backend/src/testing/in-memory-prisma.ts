@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { PlayerId } from '@khalistra/game-engine';
 
 type SnapshotKind = 'INIT' | 'RUNTIME';
@@ -33,14 +34,39 @@ type MatchCreateInput = MatchRow & {
 
 type MatchUpdateInput = Partial<Pick<MatchRow, 'status' | 'activePlayerId' | 'winnerId' | 'turn'>>;
 
+type RoomStatus = 'WAITING' | 'READY' | 'IN_MATCH' | 'CLOSED' | 'EXPIRED';
+
+type RoomRow = {
+  id: string;
+  code: string;
+  status: RoomStatus;
+  matchId?: string | null;
+  hostPlayerId: string;
+  guestPlayerId?: string | null;
+  hostDisplayName: string;
+  guestDisplayName?: string | null;
+  hostSecret: string;
+  guestSecret?: string | null;
+  hostJoinedAt: Date;
+  guestJoinedAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  expiresAt: Date;
+};
+
 export class InMemoryPrismaService {
   private readonly players = new Map<string, { id: string }>();
   private readonly matches = new Map<string, MatchRow>();
   private readonly snapshots = new Map<string, StoredSnapshot[]>();
+  private readonly rooms = new Map<string, RoomRow>();
 
   readonly player = {
     findMany: ({ where }: { where: { id: { in: string[] } } }) =>
       Promise.resolve(where.id.in.filter((id) => this.players.has(id)).map((id) => ({ id }))),
+    create: ({ data }: { data: { id: string } }) => {
+      this.players.set(data.id, { id: data.id });
+      return Promise.resolve({ id: data.id });
+    },
   };
 
   readonly match = {
@@ -103,6 +129,61 @@ export class InMemoryPrismaService {
 
   readonly moveRecord = {
     create: () => Promise.resolve(undefined),
+  };
+
+  readonly room = {
+    findUnique: ({ where }: { where: { code: string } }) => {
+      const room = Array.from(this.rooms.values()).find((entry) => entry.code === where.code);
+      return Promise.resolve(room ?? null);
+    },
+    create: ({
+      data,
+    }: {
+      data: Partial<RoomRow> & Pick<RoomRow, 'code' | 'hostPlayerId' | 'hostDisplayName' | 'hostSecret' | 'expiresAt'>;
+    }) => {
+      const now = new Date();
+      const record: RoomRow = {
+        id: randomUUID(),
+        code: data.code,
+        status: data.status ?? 'WAITING',
+        matchId: data.matchId ?? null,
+        hostPlayerId: data.hostPlayerId,
+        guestPlayerId: data.guestPlayerId ?? null,
+        hostDisplayName: data.hostDisplayName,
+        guestDisplayName: data.guestDisplayName ?? null,
+        hostSecret: data.hostSecret,
+        guestSecret: data.guestSecret ?? null,
+        hostJoinedAt: data.hostJoinedAt ?? now,
+        guestJoinedAt: data.guestJoinedAt ?? null,
+        createdAt: now,
+        updatedAt: now,
+        expiresAt: data.expiresAt,
+      };
+      this.rooms.set(record.id, record);
+      return Promise.resolve(record);
+    },
+    update: ({ where, data }: { where: { id: string }; data: Partial<RoomRow> }) => {
+      const room = this.rooms.get(where.id);
+      if (!room) {
+        return Promise.resolve(null);
+      }
+      Object.assign(room, data);
+      room.updatedAt = new Date();
+      this.rooms.set(room.id, room);
+      return Promise.resolve(room);
+    },
+    updateMany: ({ where, data }: { where: { matchId?: string }; data: Partial<RoomRow> }) => {
+      let count = 0;
+      this.rooms.forEach((room) => {
+        if (where.matchId && room.matchId !== where.matchId) {
+          return;
+        }
+        Object.assign(room, data);
+        room.updatedAt = new Date();
+        count += 1;
+      });
+      return Promise.resolve({ count });
+    },
   };
 
   seedPlayers(players: PlayerId[]) {

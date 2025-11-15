@@ -21,34 +21,32 @@ const computeLegalMoves = (state?: GameStateSnapshot, pieceId?: string): LegalMo
   return listLegalMoves(state, pieceId);
 };
 
-interface MatchStore {
-  matchId?: string;
-  state?: GameStateSnapshot;
-  event?: MatchEnvelope['event'];
-  loading: boolean;
-  submitting: boolean;
-  error?: string;
-  selectedPieceId?: string;
-  legalMoves: LegalMove[];
-  players: [PlayerId, PlayerId];
+const createBaseState = () => ({
+  matchId: undefined as string | undefined,
+  state: undefined as GameStateSnapshot | undefined,
+  event: undefined as MatchEnvelope['event'] | undefined,
+  loading: false,
+  submitting: false,
+  error: undefined as string | undefined,
+  selectedPieceId: undefined as string | undefined,
+  legalMoves: [] as LegalMove[],
+  players: DEFAULT_PLAYERS as [PlayerId, PlayerId],
+  localPlayerId: undefined as PlayerId | undefined
+});
+
+interface MatchStore extends ReturnType<typeof createBaseState> {
   spawnMatch: () => Promise<void>;
   ingestMatch: (payload: MatchEnvelope) => void;
   selectPiece: (pieceId?: string) => void;
   submitMove: (pieceId: string, target: Vector2) => Promise<void>;
   clearError: () => void;
   setError: (message: string) => void;
+  setLocalPlayer: (playerId?: PlayerId) => void;
+  reset: () => void;
 }
 
 export const useMatchStore = create<MatchStore>((set, get) => ({
-  matchId: undefined,
-  state: undefined,
-  event: undefined,
-  loading: false,
-  submitting: false,
-  error: undefined,
-  selectedPieceId: undefined,
-  legalMoves: [],
-  players: DEFAULT_PLAYERS,
+  ...createBaseState(),
   spawnMatch: async () => {
     const players = get().players;
     set({ loading: true, error: undefined, selectedPieceId: undefined, legalMoves: [] });
@@ -74,7 +72,8 @@ export const useMatchStore = create<MatchStore>((set, get) => ({
         state: payload.state,
         event: payload.event,
         selectedPieceId: nextSelected,
-        legalMoves: computeLegalMoves(payload.state, nextSelected)
+        legalMoves: computeLegalMoves(payload.state, nextSelected),
+        players: payload.state.players
       };
     });
   },
@@ -91,7 +90,7 @@ export const useMatchStore = create<MatchStore>((set, get) => ({
   },
   submitMove: async (pieceId, target) => {
     const matchId = get().matchId;
-    const players = get().players;
+    const actorId = get().localPlayerId ?? get().players[0];
     if (!matchId) {
       return;
     }
@@ -103,7 +102,7 @@ export const useMatchStore = create<MatchStore>((set, get) => ({
 
       if (realtime) {
         try {
-          payload = await realtime.submitMove(matchId, { pieceId, to: target }, players[0]);
+          payload = await realtime.submitMove(matchId, { pieceId, to: target }, actorId);
         } catch (error) {
           console.warn('Falha no envio realtime, tentando fallback HTTP.', error);
         }
@@ -123,7 +122,9 @@ export const useMatchStore = create<MatchStore>((set, get) => ({
     }
   },
   clearError: () => set({ error: undefined }),
-  setError: (message) => set({ error: message })
+  setError: (message) => set({ error: message }),
+  setLocalPlayer: (playerId) => set({ localPlayerId: playerId }),
+  reset: () => set({ ...createBaseState() })
 }));
 
 export const DEFAULT_FRONTEND_PLAYERS = DEFAULT_PLAYERS;
